@@ -2,6 +2,7 @@
 
 import rospy
 from Tkinter import *
+import tkFont
 import serial
 import time
 
@@ -18,21 +19,44 @@ class EStop():
         self.STOP = rospy.get_param("STOP_msg", "B")
 
         self.gui.after(200, self.send_command)
-        b = Button(self.gui, text = "E-Stop", command=self.change_status)
-        b.pack()
+        self.b = Button(self.gui, 
+            text="Engage E-Stop", 
+            command=self.change_status, 
+            bg="red",
+            activebackground="red",
+            height=2,
+            width=15,
+            font=tkFont.Font(family="Times", size="60"))
+        self.b.pack()
 
     def change_status(self):
-        self.estop_engaged = (not self.estop_engaged)
-        if not self.estop_engaged:
-            ser.write(self.STOP)
-        print "estop engaged:", self.estop_engaged
+        if self.estop_engaged:
+            self.disengage_estop()
+        else:
+            self.engage_estop()
+
+    def disengage_estop(self):
+        self.estop_engaged = False
+        self.b["text"] = "Engage E-Stop"
+        self.b["bg"] = "red"
+        self.b["activebackground"]="red",
+        print "estop engaged: False"
+        self.b.pack()
+
+    def engage_estop(self):
+        self.estop_engaged = True
+        self.serial.write(self.STOP)
+        self.b["text"] = "Disengage E-Stop"
+        self.b["bg"] = "green"
+        self.b["activebackground"]="green",
+        print "estop engaged: True"
+        self.b.pack()
+
 
     def send_command(self):
         resp =  ser.read(100)
         if 'STOP' in resp:
-            self.estop_engaged = True
-            ser.write(self.STOP)
-            print "estop engaged: True"
+            self.engage_estop()
         print resp
 
         if not self.estop_engaged:
