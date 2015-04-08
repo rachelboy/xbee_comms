@@ -4,9 +4,11 @@ const int write_estop = A0; // the pin that the LED is attached to
 const int read_estop = A1; // a pin attached to the input to the relay (should pull low)
 int incomingByte;      // a variable to read incoming serial data into
 unsigned long lastPing = 0;
+unsigned long lastAlert = 0;
 
-byte okAck[] = {0x3B, 0x29, 0x0A};
-byte stopAck[] = {0x3A, 0x4F, 0x0A};
+byte okAck[] = {0x3B, 0x29, 0x0A}; // ;)
+byte stopAck[] = {0x3A, 0x4F, 0x0A}; // :O
+byte estopAlert[] = {0x53, 0x54, 0x4F, 0x50, 0x0A}; // STOP
 
 SoftwareSerial remoteSerial(10,11); // RX, TX
 
@@ -24,7 +26,12 @@ void eStop() {
 }
 
 void alertEStop() {
-  Serial.print('STOP');
+  unsigned long time = millis();
+  if (time - lastAlert > 2000 || lastAlert == 0){
+    lastAlert = time;
+    Serial.write(estopAlert, 5);
+    remoteSerial.write(estopAlert, 5);
+  }
 }
 
 void setup() {
@@ -32,6 +39,9 @@ void setup() {
   remoteSerial.begin(19200);
   pinMode(write_estop, OUTPUT);
   pinMode(read_estop, INPUT);
+  
+  Serial.println("howdy");
+  remoteSerial.println("hi");
 }
 
 void loop() {
@@ -53,14 +63,10 @@ void loop() {
     
   }
   
-  if (Serial.available() > 0) {
-    Serial.println(Serial.read()):
-  }
-  
 //  hook a pin up to the signal going to the relay 
 //  so that we can report if the eStop is engaged
 //  (should pull low when floating)
-//  if (analogRead(read_estop) < 100) {
-//    alertEStop();
-//  }
+  if (analogRead(read_estop) < 100) {
+    alertEStop();
+  }
 }

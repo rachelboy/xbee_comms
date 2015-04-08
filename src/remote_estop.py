@@ -28,11 +28,18 @@ class EStop():
         print "estop engaged:", self.estop_engaged
 
     def send_command(self):
+        resp =  ser.read(100)
+        if 'STOP' in resp:
+            self.estop_engaged = True
+            ser.write(self.STOP)
+            print "estop engaged: True"
+        print resp
+
         if not self.estop_engaged:
             ser.write(self.OK)
         else:
             ser.write(self.STOP)
-        print ser.read(100)
+
         self.gui.after(200, self.send_command)
 
     def execute(self):
