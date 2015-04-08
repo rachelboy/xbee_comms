@@ -1,10 +1,14 @@
+#include <SoftwareSerial.h>
+
 const int write_estop = A0; // the pin that the LED is attached to
 const int read_estop = A1; // a pin attached to the input to the relay (should pull low)
 int incomingByte;      // a variable to read incoming serial data into
 unsigned long lastPing = 0;
 
-byte okAck[3];
-byte stopAck[3];
+byte okAck[] = {0x3B, 0x29, 0x0A};
+byte stopAck[] = {0x3A, 0x4F, 0x0A};
+
+SoftwareSerial remoteSerial(10,11); // RX, TX
 
 void deadMansSwitch(){
   unsigned long time = millis();
@@ -24,15 +28,10 @@ void alertEStop() {
 }
 
 void setup() {
-  Serial.begin(19200);
+  Serial.begin(9600);
+  remoteSerial.begin(19200);
   pinMode(write_estop, OUTPUT);
   pinMode(read_estop, INPUT);
-  okAck[0] = 0x3B;
-  okAck[1] = 0x29;
-  okAck[2] = 0x0A;
-  stopAck[0] = 0x3A;
-  stopAck[1] = 0x4F;
-  stopAck[2] = 0x0A;
 }
 
 void loop() {
@@ -40,17 +39,22 @@ void loop() {
      deadMansSwitch();
    }
   
-  if (Serial.available() > 0) {
-    incomingByte = Serial.read();
+  if (remoteSerial.available() > 0) {
+    incomingByte = remoteSerial.read();
     if (incomingByte == 'A') {
       lastPing = millis();
-      Serial.write(okAck,3);
+      remoteSerial.write(okAck,3);
     } 
     if (incomingByte == 'B') {
       eStop();
       lastPing = 0;
-      Serial.write(stopAck,3);
+      remoteSerial.write(stopAck,3);
     }
+    
+  }
+  
+  if (Serial.available() > 0) {
+    Serial.println(Serial.read()):
   }
   
 //  hook a pin up to the signal going to the relay 
