@@ -48,7 +48,7 @@ byte okAck[] = {0x3B, 0x29, 0x0A}; // ;)
 byte stopAck[] = {0x3A, 0x4F, 0x0A}; // :O
 byte estopAlert[] = {0x53, 0x54, 0x4F, 0x50, 0x0A}; // STOP
 
-SoftwareSerial remoteSerial(10,12); // RX, TX
+SoftwareSerial remoteSerial(A2,A3); // RX, TX
 
 void deadMansSwitch(){
   unsigned long time = millis();
@@ -120,10 +120,16 @@ void updateLights(){
 
 
 void setup() {
-  while(!Serial){
-    delay(100); 
-  }
+//  while(!Serial){
+//    delay(100); 
+//  }
   Serial.begin(9600);
+  remoteSerial.begin(19200);
+  pinMode(write_estop, OUTPUT);
+  pinMode(read_estop, INPUT);
+  
+  Serial.println("howdy");
+  remoteSerial.println("hi");
   
   // Sets the number of 8-bit registers that are used.
   ShiftPWM.SetAmountOfRegisters(numRegisters);
@@ -133,21 +139,13 @@ void setup() {
   ShiftPWM.SetPinGrouping(2); //This is the default, but I added here to demonstrate how to use the funtion
   
   ShiftPWM.Start(pwmFrequency,maxBrightness);
-  
-  remoteSerial.begin(19200);
-  pinMode(write_estop, OUTPUT);
-  pinMode(read_estop, INPUT);
-  remoteSerial.println("hi");
-  Serial.println("hello");
 }
 
 void loop() {
   if((lastPing != 0) && (millis()-lastPing < 1000)) {
      deadMansSwitch();
    }
-  
-  remoteSerial.println("yay");
-  Serial.println("good");
+
   
   if (remoteSerial.available() > 0) {
     incomingByte = remoteSerial.read();
