@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import rospy
+# import rospy
 from Tkinter import *
 import tkFont
 import serial
@@ -9,14 +9,14 @@ import time
 class EStop():
 
     def __init__(self, serial):
-        rospy.init_node('remote_estop', anonymous=True)
+        # rospy.init_node('remote_estop', anonymous=True)
 
         self.estop_engaged = False
         self.serial = serial
         self.gui = Tk()
 
-        self.OK = rospy.get_param("OK_msg", "A")
-        self.STOP = rospy.get_param("STOP_msg", "B")
+        self.OK = "A" #rospy.get_param("OK_msg", "A")
+        self.STOP = "B" #rospy.get_param("STOP_msg", "B")
 
         self.gui.after(200, self.send_command)
         self.b = Button(self.gui, 

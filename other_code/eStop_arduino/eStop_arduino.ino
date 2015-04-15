@@ -1,10 +1,11 @@
 #include <SoftwareSerial.h>
 
-const int write_estop = A0; // the pin that the LED is attached to
+const int write_estop = 13; // the pin that the LED is attached to
 const int read_estop = A1; // a pin attached to the input to the relay (should pull low)
 int incomingByte;      // a variable to read incoming serial data into
 unsigned long lastPing = 0;
 unsigned long lastAlert = 0;
+unsigned long time;
 
 byte okAck[] = {0x3B, 0x29, 0x0A}; // ;)
 byte stopAck[] = {0x3A, 0x4F, 0x0A}; // :O
@@ -13,7 +14,7 @@ byte estopAlert[] = {0x53, 0x54, 0x4F, 0x50, 0x0A}; // STOP
 SoftwareSerial remoteSerial(10,11); // RX, TX
 
 void deadMansSwitch(){
-  unsigned long time = millis();
+  time = millis();
   if(((time>>5)&1) == 1) {
     digitalWrite(write_estop, HIGH);
   } else {
@@ -26,7 +27,7 @@ void eStop() {
 }
 
 void alertEStop() {
-  unsigned long time = millis();
+  time = millis();
   if (time - lastAlert > 2000 || lastAlert == 0){
     lastAlert = time;
     Serial.write(estopAlert, 5);
