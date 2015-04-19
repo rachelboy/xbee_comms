@@ -161,7 +161,7 @@ void loop() {
     
   }
 
-  if (analogRead(read_estop) < 100) {
+  if (analogRead(read_estop) < 500) {
     alertEStop();
   }
   
