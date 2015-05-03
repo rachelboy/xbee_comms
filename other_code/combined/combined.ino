@@ -37,6 +37,7 @@ byte cmdBuf[5];
 int colors[][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
 int freqs[] = {0,0,0,0,0,0,0,0};
 boolean fades[] = {false, false, false, false, false, false, false, false};
+boolean state[] = {3,3,3,3,3,3,3,3}; // 0=solid color written, 1=blink off, 2=blink on, 3=new value
 
 const int write_estop = A0; // the pin that the LED is attached to
 const int read_estop = A1; // a pin attached to the input to the relay (should pull low)
@@ -85,22 +86,30 @@ void parseCmd() {
     freqs[led] = f-128;
     fades[led] = true;
   }
+  state[led] = 3;
 }
 
 void updateLights(){
   for(unsigned int led=0; led<numRGBLeds; led++){
     if(freqs[led] == 0){
-      ShiftPWM.SetRGB(led,colors[led][0],colors[led][1],colors[led][2]);
+      if (state[led] != 0) {
+        // solid color
+        ShiftPWM.SetRGB(led,colors[led][0],colors[led][1],colors[led][2]);
+        state[led] = 0;
+      }
     } else {
     unsigned long time = millis();
     if(!(fades[led])){
-//      time = time>>freqs[led]; //divide by the appropriate factor of 2
-      if(((time>>(freqs[led]))&1) == 0) {
+      // blinking
+      if(((time>>(freqs[led]))&1) == 0 && state[led] != 2) {
         ShiftPWM.SetRGB(led,colors[led][0],colors[led][1],colors[led][2]);
-      } else {
+        state[led] = 2;
+      } else if (state[led] != 1) {
         ShiftPWM.SetRGB(led,0,0,0);
+        state[led] = 2;
       }
     } else {
+      // fading
       int max_time = pow(2, (freqs[led])-1) - 1;
       int current_time = time&max_time;
       float perc;
@@ -161,7 +170,7 @@ void loop() {
     
   }
 
-  if (analogRead(read_estop) < 500) {
+  if (analogRead(read_estop) < 620) {
     alertEStop();
   }
   
