@@ -17,7 +17,7 @@ const bool ShiftPWM_invertOutputs = false;
 // You can enable the option below to shift the PWM phase of each shift register by 8 compared to the previous.
 // This will slightly increase the interrupt load, but will prevent all PWM signals from becoming high at the same time.
 // This will be a bit easier on your power supply, because the current peaks are distributed.
-const bool ShiftPWM_balanceLoad = false;
+const bool ShiftPWM_balanceLoad = true;
 
 #include <ShiftPWM.h>   // include ShiftPWM.h after setting the pins!
 #include <SoftwareSerial.h>
@@ -25,7 +25,7 @@ const bool ShiftPWM_balanceLoad = false;
 // Here you set the number of brightness levels, the update frequency and the number of shift registers.
 // These values affect the load of ShiftPWM.
 // Choose them wisely and use the PrintInterruptLoad() function to verify your load.
-unsigned char maxBrightness = 255;
+unsigned char maxBrightness = 170;
 unsigned char pwmFrequency = 75;
 unsigned int numRegisters = 3;
 unsigned int numOutputs = numRegisters*8;
@@ -101,12 +101,14 @@ void updateLights(){
     unsigned long time = millis();
     if(!(fades[led])){
       // blinking
-      if(((time>>(freqs[led]))&1) == 0 && state[led] != 2) {
-        ShiftPWM.SetRGB(led,colors[led][0],colors[led][1],colors[led][2]);
-        state[led] = 2;
-      } else if (state[led] != 1) {
+      if(((time>>(freqs[led]))&1) == 0) {
+        if (state[led] != 2) {
+          ShiftPWM.SetRGB(led,colors[led][0],colors[led][1],colors[led][2]);
+          state[led] = 2;
+        }
+      } else if(state[led] != 1){
         ShiftPWM.SetRGB(led,0,0,0);
-        state[led] = 2;
+        state[led] = 1;
       }
     } else {
       // fading
@@ -151,6 +153,7 @@ void setup() {
 }
 
 void loop() {
+  
   if((lastPing != 0) && (millis()-lastPing < 1000)) {
      deadMansSwitch();
    }
@@ -175,6 +178,7 @@ void loop() {
   }
   
   if (Serial.available() > 0) {
+    
     nextChar = Serial.read();
     Serial.println(nextChar);
     if (nextChar == 254 && ptr == -1) {
